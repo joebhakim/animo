@@ -6,6 +6,7 @@ import type { GameQuestion } from '@/types/taxonomy'
 import { getOptionsForRank } from '@/utils/taxonomyMaps'
 import { getHints } from '@/utils/hintManager'
 import HintBox from '@/components/HintBox'
+import StatusMessage from '@/components/StatusMessage'
 
 const RANK_ORDER = [
   'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
@@ -14,10 +15,12 @@ const RANK_ORDER = [
 export default function Home() {
   const [question, setQuestion] = useState<GameQuestion | null>(null)
   const [currentRankIndex, setCurrentRankIndex] = useState(0)
-  const [selectedTaxon, setSelectedTaxon] = useState('')
   const [showHint, setShowHint] = useState(false)
   const [loading, setLoading] = useState(true)
   const [hints, setHints] = useState<Record<string, string>>({})
+  const [lastGuess, setLastGuess] = useState<string | null>(null)
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [previousRank, setPreviousRank] = useState<string | null>(null)
 
   useEffect(() => {
     fetchQuestion()
@@ -30,7 +33,6 @@ export default function Home() {
       const data = await response.json()
       setQuestion(data)
       setCurrentRankIndex(0)
-      setSelectedTaxon('')
       setShowHint(false)
       setHints({})
     } catch (error) {
@@ -56,16 +58,29 @@ export default function Home() {
 
   const handleCorrectAnswer = () => {
     if (currentRankIndex === RANK_ORDER.length - 1) {
-      alert('Congratulations! You\'ve correctly identified all taxonomic ranks!');
       fetchQuestion();
     } else {
+      setPreviousRank(RANK_ORDER[currentRankIndex]);
       setCurrentRankIndex(currentRankIndex + 1);
-      setSelectedTaxon('');
       setShowHint(false);
       setHints({});
-      alert('Correct! Try the next taxonomic rank.');
     }
   }
+
+  const handleGuess = (option: string) => {
+    setLastGuess(option);
+    
+    const correct = option.toLowerCase() === question!.taxon[currentRank].toLowerCase();
+    setIsCorrect(correct);
+
+    if (correct) {
+      setTimeout(() => {
+        handleCorrectAnswer();
+        setLastGuess(null);
+        setIsCorrect(null);
+      }, 1500);
+    }
+  };
 
   if (loading) {
     return <div className="min-h-screen p-8 flex items-center justify-center">
@@ -96,9 +111,14 @@ export default function Home() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-gray-900">
-            Select {currentRank.charAt(0).toUpperCase() + currentRank.slice(1)}:
-          </h2>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <StatusMessage
+              currentRank={currentRank}
+              lastGuess={lastGuess}
+              isCorrect={isCorrect}
+              previousRank={previousRank || ''}
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
             {getOptionsForRank(currentRank, 
@@ -106,14 +126,7 @@ export default function Home() {
             ).map((option) => (
               <button
                 key={option}
-                onClick={() => {
-                  setSelectedTaxon(option);
-                  if (option.toLowerCase() === question.taxon[currentRank].toLowerCase()) {
-                    handleCorrectAnswer();
-                  } else {
-                    alert('Try again!');
-                  }
-                }}
+                onClick={() => handleGuess(option)}
                 className="p-3 text-left border rounded-md hover:bg-gray-50 transition-colors"
               >
                 {option}
