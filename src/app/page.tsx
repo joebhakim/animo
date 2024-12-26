@@ -5,6 +5,8 @@ import Image from 'next/image'
 import type { GameQuestion } from '@/types/taxonomy'
 import { getOptionsForRank } from '@/utils/taxonomyMaps'
 import { getWikiExtract } from '@/utils/wikiApi'
+import { getHints, HINT_LABELS } from '@/utils/hintManager'
+import HintBox from '@/components/HintBox'
 
 const RANK_ORDER = [
   'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
@@ -16,7 +18,7 @@ export default function Home() {
   const [selectedTaxon, setSelectedTaxon] = useState('')
   const [showHint, setShowHint] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [hintText, setHintText] = useState<string | null>(null)
+  const [hints, setHints] = useState<Record<string, Record<string, string | null>>>({})
 
   useEffect(() => {
     fetchQuestion()
@@ -28,8 +30,10 @@ export default function Home() {
       const response = await fetch('/api/questions')
       const data = await response.json()
       setQuestion(data)
-      setCurrentRankIndex(0) // Reset to kingdom when getting new question
+      setCurrentRankIndex(0)
       setSelectedTaxon('')
+      setShowHint(false)
+      setHints({})
     } catch (error) {
       console.error('Error fetching question:', error)
     } finally {
@@ -37,31 +41,31 @@ export default function Home() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!question) return
-
-    const currentRank = RANK_ORDER[currentRankIndex]
-    if (selectedTaxon.toLowerCase() === question.taxon[currentRank].toLowerCase()) {
-      if (currentRankIndex === RANK_ORDER.length - 1) {
-        alert('Congratulations! You\'ve correctly identified all taxonomic ranks!')
-        fetchQuestion()
-      } else {
-        setCurrentRankIndex(currentRankIndex + 1)
-        setSelectedTaxon('')
-        alert('Correct! Try the next taxonomic rank.')
-      }
-    } else {
-      alert('Try again!')
-    }
-  }
-
   const handleShowHint = async () => {
-    if (!showHint && !hintText && question) {
-      const extract = await getWikiExtract(question.taxon[RANK_ORDER[currentRankIndex]]);
-      setHintText(extract);
+    if (!showHint && Object.keys(hints).length === 0 && question) {
+      const options = getOptionsForRank(
+        RANK_ORDER[currentRankIndex],
+        currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
+      );
+      
+      const taxonsToHint = options.slice(0, 3);
+      const newHints = await getHints(taxonsToHint);
+      setHints(newHints);
     }
     setShowHint(!showHint);
+  }
+
+  const handleCorrectAnswer = () => {
+    if (currentRankIndex === RANK_ORDER.length - 1) {
+      alert('Congratulations! You\'ve correctly identified all taxonomic ranks!');
+      fetchQuestion();
+    } else {
+      setCurrentRankIndex(currentRankIndex + 1);
+      setSelectedTaxon('');
+      setShowHint(false);
+      setHints({});
+      alert('Correct! Try the next taxonomic rank.');
+    }
   }
 
   if (loading) {
@@ -92,57 +96,42 @@ export default function Home() {
           />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="taxonRank" className="block text-sm font-medium text-gray-700 mb-2">
-              Select {currentRank.charAt(0).toUpperCase() + currentRank.slice(1)}:
-            </label>
-            <select
-              id="taxonRank"
-              value={selectedTaxon}
-              onChange={(e) => setSelectedTaxon(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900"
-              required
-            >
-              <option value="">Select a {currentRank}...</option>
-              {getOptionsForRank(currentRank, 
-                currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
-              ).map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium text-gray-900">
+            Select {currentRank.charAt(0).toUpperCase() + currentRank.slice(1)}:
+          </h2>
+
+          <div className="grid grid-cols-2 gap-2">
+            {getOptionsForRank(currentRank, 
+              currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
+            ).map((option) => (
+              <button
+                key={option}
+                onClick={() => {
+                  setSelectedTaxon(option);
+                  if (option.toLowerCase() === question.taxon[currentRank].toLowerCase()) {
+                    handleCorrectAnswer();
+                  } else {
+                    alert('Try again!');
+                  }
+                }}
+                className="p-3 text-left border rounded-md hover:bg-gray-50 transition-colors"
+              >
+                {option}
+              </button>
+            ))}
           </div>
 
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={handleShowHint}
-              className="bg-blue-50 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-100"
-            >
-              {showHint ? 'Hide Hint' : 'Show Hint'}
-            </button>
-
-            {showHint && (
-              <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-                <h3 className="font-semibold mb-2 text-gray-900">Hint:</h3>
-                {hintText ? (
-                  <div dangerouslySetInnerHTML={{ __html: hintText }} />
-                ) : (
-                  <p>Loading hint...</p>
-                )}
-              </div>
+          <HintBox
+            hints={hints[currentRank] || {}}
+            taxonNames={getOptionsForRank(currentRank, 
+              currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
             )}
-
-            <button
-              type="submit"
-              className="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-            >
-              Submit
-            </button>
-          </div>
-        </form>
+            isVisible={showHint}
+            onToggle={handleShowHint}
+            isLoading={Object.keys(hints[currentRank] || {}).length === 0 && showHint}
+          />
+        </div>
       </div>
     </main>
   )
