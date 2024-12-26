@@ -3,25 +3,20 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import type { GameQuestion } from '@/types/taxonomy'
-import { KINGDOM_DESCRIPTIONS } from '@/types/taxonomy'
 import { getOptionsForRank } from '@/utils/taxonomyMaps'
+import { getWikiExtract } from '@/utils/wikiApi'
 
-const RANK_ORDER: ('kingdom' | 'phylum' | 'class' | 'order' | 'family' | 'genus' | 'species')[] = [
-  'kingdom',
-  'phylum',
-  'class',
-  'order',
-  'family',
-  'genus',
-  'species'
-];
+const RANK_ORDER = [
+  'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
+] as const;
 
 export default function Home() {
   const [question, setQuestion] = useState<GameQuestion | null>(null)
   const [currentRankIndex, setCurrentRankIndex] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState('')
+  const [selectedTaxon, setSelectedTaxon] = useState('')
   const [showHint, setShowHint] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [hintText, setHintText] = useState<string | null>(null)
 
   useEffect(() => {
     fetchQuestion()
@@ -34,7 +29,7 @@ export default function Home() {
       const data = await response.json()
       setQuestion(data)
       setCurrentRankIndex(0) // Reset to kingdom when getting new question
-      setSelectedAnswer('')
+      setSelectedTaxon('')
     } catch (error) {
       console.error('Error fetching question:', error)
     } finally {
@@ -47,20 +42,26 @@ export default function Home() {
     if (!question) return
 
     const currentRank = RANK_ORDER[currentRankIndex]
-    if (selectedAnswer.toLowerCase() === question.taxon[currentRank].toLowerCase()) {
+    if (selectedTaxon.toLowerCase() === question.taxon[currentRank].toLowerCase()) {
       if (currentRankIndex === RANK_ORDER.length - 1) {
-        // User has completed all levels
         alert('Congratulations! You\'ve correctly identified all taxonomic ranks!')
-        fetchQuestion() // Get new question
+        fetchQuestion()
       } else {
-        // Move to next rank
         setCurrentRankIndex(currentRankIndex + 1)
-        setSelectedAnswer('')
+        setSelectedTaxon('')
         alert('Correct! Try the next taxonomic rank.')
       }
     } else {
       alert('Try again!')
     }
+  }
+
+  const handleShowHint = async () => {
+    if (!showHint && !hintText && question) {
+      const extract = await getWikiExtract(question.taxon[RANK_ORDER[currentRankIndex]]);
+      setHintText(extract);
+    }
+    setShowHint(!showHint);
   }
 
   if (loading) {
@@ -98,8 +99,8 @@ export default function Home() {
             </label>
             <select
               id="taxonRank"
-              value={selectedAnswer}
-              onChange={(e) => setSelectedAnswer(e.target.value)}
+              value={selectedTaxon}
+              onChange={(e) => setSelectedTaxon(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-900"
               required
             >
@@ -117,7 +118,7 @@ export default function Home() {
           <div className="space-y-4">
             <button
               type="button"
-              onClick={() => setShowHint(!showHint)}
+              onClick={handleShowHint}
               className="bg-blue-50 text-blue-600 px-4 py-2 rounded-md hover:bg-blue-100"
             >
               {showHint ? 'Hide Hint' : 'Show Hint'}
@@ -125,14 +126,12 @@ export default function Home() {
 
             {showHint && (
               <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-                <h3 className="font-semibold mb-2 text-gray-900">Kingdom Descriptions:</h3>
-                <ul className="space-y-2">
-                  {Object.entries(KINGDOM_DESCRIPTIONS).map(([kingdom, description]) => (
-                    <li key={kingdom}>
-                      <span className="font-medium">{kingdom}</span>: {description}
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="font-semibold mb-2 text-gray-900">Hint:</h3>
+                {hintText ? (
+                  <div dangerouslySetInnerHTML={{ __html: hintText }} />
+                ) : (
+                  <p>Loading hint...</p>
+                )}
               </div>
             )}
 

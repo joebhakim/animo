@@ -56,9 +56,9 @@ export default function Home() {
               className="p-2 border rounded"
             >
               <option value="">Select a kingdom</option>
-              {Object.keys(kingdoms).map((kingdom) => (
-                <option key={kingdom} value={kingdom}>
-                  {kingdom.charAt(0).toUpperCase() + kingdom.slice(1)}
+              {Object.keys(kingdoms).map((taxon) => (
+                <option key={taxon} value={taxon}>
+                  {taxon.charAt(0).toUpperCase() + taxon.slice(1)}
                 </option>
               ))}
             </select>
@@ -80,11 +80,11 @@ export default function Home() {
 
           {showHint && (
             <div className="bg-gray-100 p-4 rounded">
-              <h2 className="font-bold mb-2">Kingdom Descriptions:</h2>
+              <h2 className="font-bold mb-2">Taxon Descriptions:</h2>
               <ul className="space-y-2">
-                {Object.entries(kingdoms).map(([kingdom, description]) => (
-                  <li key={kingdom}>
-                    <span className="font-semibold capitalize">{kingdom}</span>: {description}
+                {Object.entries(kingdoms).map(([taxon, description]) => (
+                  <li key={taxon}>
+                    <span className="font-semibold capitalize">{taxon}</span>: {description}
                   </li>
                 ))}
               </ul>

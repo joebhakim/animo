@@ -32,23 +32,3 @@ taxon level (e.g. kingdom, phylum, class, order, family, genus, species), descri
 
 ## Technologies:
 Webapp. Vercel hosted. Next.js, Tailwind, postgres, supabase.
-
-
-## Notes: 
-Taxonomically identifying an animal looks like this: 
-E.g. "Leafy Spurge Hawkmoth"
-
-Full tree:
-Animals
- Arthropods
-  Hexapods
-   Insects
-    Winged and Once-winged Insects
-     Butterflies and Moths
-      Hawk, Sphinx, Silk, Emperor, and Allied Moths 
-       Sphinx Moths
-        Macroglossine Sphinx Moths
-         Tribe: Macroglossini
-          Subtribe: Choerocampina
-           Genus: Hyles
-            Leafy Spurge Hawkmoth 
