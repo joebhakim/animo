@@ -78,7 +78,7 @@ export default function Home() {
         handleCorrectAnswer();
         setLastGuess(null);
         setIsCorrect(null);
-      }, 1500);
+      }, 2500);
     }
   };
 
