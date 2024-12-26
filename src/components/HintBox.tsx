@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 
 interface HintBoxProps {
   hints: Record<string, string>;
-  taxonNames: string[];
   isVisible: boolean;
   onToggle: () => void;
   isLoading?: boolean;
 }
 
-export default function HintBox({ hints, taxonNames, isVisible, onToggle, isLoading = false }: HintBoxProps) {
+export default function HintBox({ hints, isVisible, onToggle, isLoading = false }: HintBoxProps) {
   const [selectedTaxon, setSelectedTaxon] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +33,7 @@ export default function HintBox({ hints, taxonNames, isVisible, onToggle, isLoad
           <div className="mb-4">
             <h4 className="text-sm text-gray-600 mb-2">Select a taxon to learn about:</h4>
             <div className="flex flex-wrap gap-2">
-              {taxonNames.map((taxon) => (
+              {Object.keys(hints).map((taxon) => (
                 <button
                   key={taxon}
                   onClick={() => setSelectedTaxon(taxon)}

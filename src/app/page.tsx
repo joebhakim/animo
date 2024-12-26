@@ -7,6 +7,7 @@ import { getOptionsForRank } from '@/utils/taxonomyMaps'
 import { getHints } from '@/utils/hintManager'
 import HintBox from '@/components/HintBox'
 import StatusMessage from '@/components/StatusMessage'
+import VictoryScreen from '@/components/VictoryScreen'
 
 const RANK_ORDER = [
   'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
@@ -21,6 +22,7 @@ export default function Home() {
   const [lastGuess, setLastGuess] = useState<string | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [previousRank, setPreviousRank] = useState<string | null>(null)
+  const [gameCompleted, setGameCompleted] = useState(false)
 
   useEffect(() => {
     fetchQuestion()
@@ -48,8 +50,22 @@ export default function Home() {
         RANK_ORDER[currentRankIndex],
         currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
       );
-      
-      const taxonsToHint = options.slice(0, 3);
+
+      const correctAnswer = question.taxon[RANK_ORDER[currentRankIndex]];
+      const otherOptions = options
+        .filter(opt => opt !== correctAnswer)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 2);
+
+      console.log('Options:', options);
+      console.log('Correct answer:', correctAnswer);
+      console.log('Other options:', otherOptions);
+      // error if correct answer not in options
+      if (!options.includes(correctAnswer)) {
+        throw new Error(`Correct answer ${correctAnswer} not found in options for rank ${RANK_ORDER[currentRankIndex]}`);
+      }
+
+      const taxonsToHint = [correctAnswer, ...otherOptions];
       const newHints = await getHints(taxonsToHint);
       setHints(newHints);
     }
@@ -58,7 +74,7 @@ export default function Home() {
 
   const handleCorrectAnswer = () => {
     if (currentRankIndex === RANK_ORDER.length - 1) {
-      fetchQuestion();
+      setGameCompleted(true);
     } else {
       setPreviousRank(RANK_ORDER[currentRankIndex]);
       setCurrentRankIndex(currentRankIndex + 1);
@@ -69,7 +85,7 @@ export default function Home() {
 
   const handleGuess = (option: string) => {
     setLastGuess(option);
-    
+
     const correct = option.toLowerCase() === question!.taxon[currentRank].toLowerCase();
     setIsCorrect(correct);
 
@@ -80,6 +96,11 @@ export default function Home() {
         setIsCorrect(null);
       }, 2500);
     }
+  };
+
+  const startNewGame = () => {
+    setGameCompleted(false);
+    fetchQuestion();
   };
 
   if (loading) {
@@ -95,56 +116,63 @@ export default function Home() {
   }
 
   const currentRank = RANK_ORDER[currentRankIndex]
-  
+
   return (
     <main className="min-h-screen p-8 max-w-4xl mx-auto bg-white text-gray-800">
       <h1 className="text-3xl font-bold mb-8 text-gray-900">Animo</h1>
-      
-      <div className="space-y-8">
-        <div className="aspect-video relative rounded-lg overflow-hidden">
-          <Image
-            src={question.identifier}
-            alt={question.taxon.scientificName}
-            fill
-            className="object-cover"
-          />
-        </div>
 
-        <div className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-md">
-            <StatusMessage
-              currentRank={currentRank}
-              lastGuess={lastGuess}
-              isCorrect={isCorrect}
-              previousRank={previousRank || ''}
+      {gameCompleted ? (
+        <VictoryScreen
+          scientificName={question.taxon.scientificName}
+          imageUrl={question.identifier}
+          onNewGame={startNewGame}
+        />
+      ) : (
+        <div className="space-y-8">
+          <div className="aspect-video relative rounded-lg overflow-hidden">
+            <Image
+              src={question.identifier}
+              alt={question.taxon.scientificName}
+              fill
+              className="object-cover"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {getOptionsForRank(currentRank, 
-              currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
-            ).map((option) => (
-              <button
-                key={option}
-                onClick={() => handleGuess(option)}
-                className="p-3 text-left border rounded-md hover:bg-gray-50 transition-colors"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-md">
+              <StatusMessage
+                currentRank={currentRank}
+                lastGuess={lastGuess}
+                isCorrect={isCorrect}
+                previousRank={previousRank || ''}
+              />
+            </div>
 
-          <HintBox
-            hints={hints}
-            taxonNames={getOptionsForRank(currentRank, 
-              currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
-            ).slice(0, 3)}
-            isVisible={showHint}
-            onToggle={handleShowHint}
-            isLoading={Object.keys(hints).length === 0 && showHint}
-          />
+            <HintBox
+              hints={hints}
+              isVisible={showHint}
+              onToggle={handleShowHint}
+              isLoading={Object.keys(hints).length === 0 && showHint}
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+              {getOptionsForRank(currentRank,
+                currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
+              ).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => handleGuess(option)}
+                  className="p-3 text-left border rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+
+
+          </div>
         </div>
-      </div>
+      )}
     </main>
   )
 }
