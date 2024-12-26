@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import type { GameQuestion } from '@/types/taxonomy'
 import { getOptionsForRank } from '@/utils/taxonomyMaps'
-import { getWikiExtract } from '@/utils/wikiApi'
-import { getHints, HINT_LABELS } from '@/utils/hintManager'
+import { getHints } from '@/utils/hintManager'
 import HintBox from '@/components/HintBox'
 
 const RANK_ORDER = [
@@ -18,7 +17,7 @@ export default function Home() {
   const [selectedTaxon, setSelectedTaxon] = useState('')
   const [showHint, setShowHint] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [hints, setHints] = useState<Record<string, Record<string, string | null>>>({})
+  const [hints, setHints] = useState<Record<string, string>>({})
 
   useEffect(() => {
     fetchQuestion()
@@ -123,13 +122,13 @@ export default function Home() {
           </div>
 
           <HintBox
-            hints={hints[currentRank] || {}}
+            hints={hints}
             taxonNames={getOptionsForRank(currentRank, 
               currentRankIndex > 0 ? question.taxon[RANK_ORDER[currentRankIndex - 1]] : undefined
-            )}
+            ).slice(0, 3)}
             isVisible={showHint}
             onToggle={handleShowHint}
-            isLoading={Object.keys(hints[currentRank] || {}).length === 0 && showHint}
+            isLoading={Object.keys(hints).length === 0 && showHint}
           />
         </div>
       </div>

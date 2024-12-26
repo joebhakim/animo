@@ -32,9 +32,9 @@ export default function HintBox({ hints, taxonNames, isVisible, onToggle, isLoad
           <h3 className="font-semibold mb-4 text-gray-900">Hints</h3>
           
           <div className="mb-4">
-            <h4 className="text-sm text-gray-600 mb-2">Select option to learn about:</h4>
-            <div className="flex gap-2">
-              {taxonNames.map((taxon, index) => (
+            <h4 className="text-sm text-gray-600 mb-2">Select a taxon to learn about:</h4>
+            <div className="flex flex-wrap gap-2">
+              {taxonNames.map((taxon) => (
                 <button
                   key={taxon}
                   onClick={() => setSelectedTaxon(taxon)}
@@ -44,7 +44,7 @@ export default function HintBox({ hints, taxonNames, isVisible, onToggle, isLoad
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  Option {index + 1}
+                  {taxon}
                 </button>
               ))}
             </div>
@@ -54,47 +54,11 @@ export default function HintBox({ hints, taxonNames, isVisible, onToggle, isLoad
             {selectedTaxon ? (
               <div className="bg-white p-4 rounded-md border border-gray-100">
                 <p className="text-gray-600">
-          {selectedTaxon && (
-            <div className="mb-4">
-              <h4 className="text-sm text-gray-600 mb-2">Select category:</h4>
-              <div className="flex gap-2 flex-wrap">
-                {Object.entries(HINT_LABELS).map(([category, label]) => (
-                  <button
-                    key={category}
-                    onClick={() => setSelectedCategory(category)}
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      selectedCategory === category
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4">
-            {selectedTaxon && selectedCategory ? (
-              <div className="bg-white p-4 rounded-md border border-gray-100">
-                <h4 className="font-medium text-gray-800">
-                  {HINT_LABELS[selectedCategory as keyof typeof HINT_LABELS]}:
-                </h4>
-                <p className="text-gray-600 mt-2">
-                  {isLoading 
-                    ? 'Loading...' 
-                    : hints[selectedTaxon]?.[selectedCategory] || 'No information available'
-                  }
+                  {isLoading ? 'Loading...' : hints[selectedTaxon]}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">
-                {!selectedTaxon 
-                  ? 'Select an option to see hints' 
-                  : 'Select a category to see information'
-                }
-              </p>
+              <p className="text-gray-500">Select a taxon to see information</p>
             )}
           </div>
         </div>
