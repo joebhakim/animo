@@ -3,7 +3,7 @@ const WIKI_API_BASE = 'https://en.wikipedia.org/w/api.php';
 // e.g.
 // https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&titles=Albert%20Einstein
 
-export async function getWikiExtract(taxonName: string): Promise<string | null> {
+export async function getWikiExtract(taxonName: string, numSentencesToFetch: number): Promise<string | null> {
   const params = new URLSearchParams({
     action: 'query',
     prop: 'extracts',
@@ -11,7 +11,7 @@ export async function getWikiExtract(taxonName: string): Promise<string | null> 
     titles: taxonName,
     format: 'json',
     origin: '*',
-    exsentences: '2',
+    exsentences: numSentencesToFetch.toString(),
     explaintext: 'true',
     redirects: '1',
     converttitles: '1'

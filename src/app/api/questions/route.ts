@@ -18,19 +18,27 @@ interface RawCSVRecord {
   identifier: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const csvPath = path.join(process.cwd(), 'data/external/obs_media_mammals_only.csv');
+    const { searchParams } = new URL(request.url);
+    const hardMode = searchParams.get('hardMode') === 'true';
+
+    const csvPath = path.join(process.cwd(), 'data/external/obs_media_mammals_aves_only.csv');
     const fileContents = await fs.readFile(csvPath, 'utf8');
     
-    const records = parse(fileContents, {
+    const allRecords = parse(fileContents, {
       columns: true,
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-    // Get current minute (0-59) and use it to select a record
-    const currentMinute = new Date().getMinutes();
-    const randomIndex = currentMinute % records.length;
+    // Filter records based on hard mode
+    const records = hardMode 
+      ? allRecords 
+      : allRecords.filter(record => record.classs === 'Mammalia');
+
+    // Get Unix timestamp in minutes and use it to select a record
+    const unixMinutes = Math.floor(Date.now() / (1000 * 60));
+    const randomIndex = unixMinutes % records.length;
     const randomRecord = records[randomIndex];
 
     const taxon: Taxon = {

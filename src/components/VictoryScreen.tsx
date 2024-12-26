@@ -1,30 +1,34 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getWikiExtract } from '@/utils/wikiApi';
+import TreeViewScore from './TreeViewScore';
+import ScoreCalculation from './ScoreCalculation';
 
 interface VictoryScreenProps {
   scientificName: string;
   imageUrl: string;
   onNewGame: () => void;
+  guessHistory: Record<string, string[]>;
+  correctGuesses: string[];
 }
 
-export default function VictoryScreen({ scientificName, imageUrl, onNewGame }: VictoryScreenProps) {
+export default function VictoryScreen({
+  scientificName,
+  imageUrl,
+  onNewGame,
+  guessHistory,
+  correctGuesses
+}: VictoryScreenProps) {
   const [speciesInfo, setSpeciesInfo] = useState<string | null>(null);
 
+  const numSentencesToFetch = 5;
   useEffect(() => {
     const fetchSpeciesInfo = async () => {
-      let info = await getWikiExtract(scientificName);
-
-      // sometimes scientificName is three words, with subspecies. If this happens, info is empty, 
-      // try again with just the first two space-separated strings.
-
-      if(!info){
+      let info = await getWikiExtract(scientificName, numSentencesToFetch);
+      if (!info) {
         const speciesNoSub = scientificName.split(' ').slice(0, 2).join(' ');
-        info = await getWikiExtract(speciesNoSub)
+        info = await getWikiExtract(speciesNoSub, numSentencesToFetch)
       }
-
-      // if it's still empty, fine.
-
       setSpeciesInfo(info);
     };
     fetchSpeciesInfo();
@@ -32,14 +36,24 @@ export default function VictoryScreen({ scientificName, imageUrl, onNewGame }: V
 
   return (
     <div className="space-y-8">
-      <div className="aspect-video relative rounded-lg overflow-hidden">
-        <Image
-          src={imageUrl}
-          alt={scientificName}
-          fill
-          className="object-cover"
+      <div className="grid grid-cols-[1fr,200px] gap-8">
+        <div className="aspect-video relative rounded-lg overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={scientificName}
+            fill
+            className="object-cover"
+          />
+        </div>
+
+        <TreeViewScore
+          guessHistory={guessHistory}
+          correctGuesses={correctGuesses}
+          currentRank="species"
         />
       </div>
+
+      <ScoreCalculation guessHistory={guessHistory} />
 
       <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -48,7 +62,7 @@ export default function VictoryScreen({ scientificName, imageUrl, onNewGame }: V
         <p className="text-gray-600 mb-4">
           Youve correctly identified: <span className="font-medium italic">{scientificName}</span>
         </p>
-        
+
         <div className="bg-white p-4 rounded-md border border-gray-100">
           {speciesInfo ? (
             <p className="text-gray-700">{speciesInfo}</p>

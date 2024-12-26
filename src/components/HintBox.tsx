@@ -5,9 +5,10 @@ interface HintBoxProps {
   isVisible: boolean;
   onToggle: () => void;
   isLoading?: boolean;
+  currentRank: string;
 }
 
-export default function HintBox({ hints, isVisible, onToggle, isLoading = false }: HintBoxProps) {
+export default function HintBox({ hints, isVisible, onToggle, isLoading = false, currentRank }: HintBoxProps) {
   const [selectedTaxon, setSelectedTaxon] = useState<string | null>(null);
 
   useEffect(() => {
@@ -15,6 +16,10 @@ export default function HintBox({ hints, isVisible, onToggle, isLoading = false 
       setSelectedTaxon(null);
     }
   }, [isVisible]);
+
+  const formatRank = (rank: string) => {
+    return <span className="font-bold">{rank.charAt(0).toUpperCase() + rank.slice(1)}</span>;
+  };
 
   return (
     <div className="space-y-4">
@@ -28,10 +33,8 @@ export default function HintBox({ hints, isVisible, onToggle, isLoading = false 
 
       {isVisible && (
         <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
-          <h3 className="font-semibold mb-4 text-gray-900">Hints</h3>
-          
           <div className="mb-4">
-            <h4 className="text-sm text-gray-600 mb-2">Select a taxon to learn about:</h4>
+            <h3 className="text-sm text-gray-600 mb-2">The {formatRank(currentRank)} is one of these three. Click to learn more.</h3>
             <div className="flex flex-wrap gap-2">
               {Object.keys(hints).map((taxon) => (
                 <button
@@ -57,7 +60,7 @@ export default function HintBox({ hints, isVisible, onToggle, isLoading = false 
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">Select a taxon to see information</p>
+              <p className="text-gray-500">{/* Select a taxon to see information */}</p>
             )}
           </div>
         </div>

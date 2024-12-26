@@ -6,8 +6,9 @@ export async function getHints(taxonNames: string[]): Promise<Record<string, str
   // Fetch Wikipedia extracts for each taxon in parallel
 
   console.log('Getting hints for...', taxonNames);
+  const numSentencesToFetch = 2;
   const hintPromises = taxonNames.map(async (taxonName) => {
-    const extract = await getWikiExtract(taxonName);
+    const extract = await getWikiExtract(taxonName, numSentencesToFetch);
     hints[taxonName] = extract || `No information available for ${taxonName}`;
   });
 

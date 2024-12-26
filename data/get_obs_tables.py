@@ -25,8 +25,8 @@ def main():
     """
 
     # Read both
-    obs = pd.read_csv("/home/joe/animo/data/external/observations_top_n.csv")
-    media = pd.read_csv("/home/joe/animo/data/external/media_top_n.csv")
+    obs = pd.read_csv("/home/joe/data_portico/observations_top_100000.csv")
+    media = pd.read_csv("/home/joe/data_portico/media_top_100000.csv")
 
     # need only the following from obs: id, scientificName,taxonRank,kingdom,phylum,class,order,family,genus,
     # need only the following from media: id, identifier
@@ -55,14 +55,16 @@ def main():
     # filter on "kingdom" == "Animalia"
     obs_media = obs_media[obs_media["kingdom"] == "Animalia"]
 
-    # for now, filter on class = 'Mammalia'
-    obs_media = obs_media[obs_media["classs"] == "Mammalia"]
+    # for now, filter on class = 'Mammalia' or 'Aves'
+    obs_media = obs_media[
+        (obs_media["classs"] == "Mammalia") | (obs_media["classs"] == "Aves")
+    ]
 
     print("number of records:", obs_media.shape[0])
     print(obs_media.head())
 
     # save to csv
-    obs_media.to_csv("/home/joe/animo/data/external/obs_media_mammals_only.csv", index=False)
+    obs_media.to_csv("/home/joe/animo/data/external/obs_media_mammals_aves_only.csv", index=False)
 
     # Now, there's a limited subtree, of kingdom=Animalia, phylym=Chordata, class=Mammalia, order=..., family=..., genus=..., species=....
     
@@ -76,6 +78,11 @@ def main():
     genus_to_species = defaultdict(set)
 
     for i, row in obs_media.iterrows():
+        # check if any are NaN or empty
+        if any([pd.isna(row[col]) for col in obs_media.columns]):
+            print("NaN value found")
+            print(row)
+            continue
         kingdom_to_phylum[row['kingdom']].add(row['phylum'])
         phylum_to_class[row['phylum']].add(row['classs'])
         class_to_order[row['classs']].add(row['order'])
