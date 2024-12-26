@@ -28,11 +28,10 @@ export async function GET() {
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-
-    
-    //const randomRecord = records[Math.floor(Math.random() * records.length)];
-    // not random for now, do the fifth one
-    const randomRecord = records[4]
+    // Get current minute (0-59) and use it to select a record
+    const currentMinute = new Date().getMinutes();
+    const randomIndex = currentMinute % records.length;
+    const randomRecord = records[randomIndex];
 
     const taxon: Taxon = {
       id: parseInt(randomRecord.id),
