@@ -1,4 +1,4 @@
-# Animo: geoguessr, but for animals.
+# Animorl: geoguessr, but for animals.
 
 ## Specifications:
 This app is a game in which photos from the iNaturalist API are displayed. 

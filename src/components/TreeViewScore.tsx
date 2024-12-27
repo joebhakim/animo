@@ -2,9 +2,10 @@ interface TreeViewScoreProps {
   guessHistory: Record<string, string[]>;  // key is rank, value is array of incorrect guesses
   correctGuesses: string[];  // array of ranks that were guessed correctly
   currentRank: string;
+  correctGuessValues: Record<string, string>;  // key is rank, value is the correct guess
 }
 
-export default function TreeViewScore({ guessHistory, correctGuesses, currentRank }: TreeViewScoreProps) {
+export default function TreeViewScore({ guessHistory, correctGuesses, currentRank, correctGuessValues }: TreeViewScoreProps) {
   const ranks = ['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'];
   
   const renderIncorrectGuesses = (incorrectGuesses: string[]) => {
@@ -21,25 +22,28 @@ export default function TreeViewScore({ guessHistory, correctGuesses, currentRan
   };
 
   const getRankKey = (rank: string) => rank.charAt(0);
-  
+
   return (
-    <div className="bg-gray-50 p-4 rounded-md border border-gray-200 h-full">
+    <div className="bg-gray-50 p-4 rounded-md border border-gray-200 h-full w-full">
       <div className="flex flex-col space-y-6">
         {ranks.map((rank) => {
           const rankKey = getRankKey(rank);
+          const isCorrect = correctGuesses.includes(rankKey);
           return (
-            <div key={rank} className="flex items-center space-x-4">
+            <div key={rank} className="grid grid-cols-[100px_1fr_auto] gap-4 items-center">
               <span className={`
-                w-8 text-center font-mono
+                text-left font-mono
                 ${currentRank.toLowerCase() === rank.toLowerCase() ? 'text-blue-600 font-bold' : 'text-gray-400'}
               `}>
                 <span className="font-bold">{rank.charAt(0)}</span>{rank.slice(1)}
               </span>
 
-              <div className="flex-grow min-w-[20px]" />
+              <span className="text-green-600 font-medium truncate">
+                {isCorrect ? correctGuessValues[rankKey] : ''}
+              </span>
 
-              <div className="flex items-center space-x-1">
-                {correctGuesses.includes(rankKey) && (
+              <div className="flex items-center justify-end space-x-1">
+                {isCorrect && (
                   <span className="text-green-500 w-5 text-center">✓</span>
                 )}
                 {guessHistory[rankKey] && renderIncorrectGuesses(guessHistory[rankKey])}

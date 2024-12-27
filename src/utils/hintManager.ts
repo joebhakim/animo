@@ -9,7 +9,7 @@ export async function getHints(taxonNames: string[]): Promise<Record<string, str
   const numSentencesToFetch = 2;
   const hintPromises = taxonNames.map(async (taxonName) => {
     const extract = await getWikiExtract(taxonName, numSentencesToFetch);
-    hints[taxonName] = extract || `No information available for ${taxonName}`;
+    hints[taxonName] = extract.extract || `No information available for ${taxonName}`;
   });
 
   await Promise.all(hintPromises);

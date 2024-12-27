@@ -5,8 +5,8 @@ import React from 'react'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Animo - Animal Guessing Game',
-  description: 'Test your knowledge of animal classification',
+  title: 'Animorl, like animorphs but like geoguessr',
+  description: 'Not publishing this anywhere since iNaturalist would go freak mode on me',
 }
 
 export default function RootLayout({

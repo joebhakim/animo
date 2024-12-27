@@ -18,24 +18,65 @@ export const taxonomicMaps = {
 
 const kingdoms_hardcoded = ['Animalia', 'Plantae', 'Fungi', 'Protista', 'Bacteria', 'Archaea']
 
-export function getOptionsForRank(rank: string, parent?: string): string[] {
+export function getRandomOptions(allOptions: string[], correctAnswer: string, count: number): string[] {
+  // Ensure correctAnswer is included
+  const otherOptions = allOptions.filter(opt => opt !== correctAnswer);
 
-  if (!parent) return kingdoms_hardcoded;
-  
-  switch (rank) {
-    case 'species':
-      return taxonomicMaps.genusToSpecies[parent] || [];
-    case 'genus':
-      return taxonomicMaps.familyToGenus[parent] || [];
-    case 'family':
-      return taxonomicMaps.orderToFamily[parent] || [];
-    case 'order':
-      return taxonomicMaps.classToOrder[parent] || [];
-    case 'class':
-      return taxonomicMaps.phylumToClass[parent] || [];
-    case 'phylum':
-      return taxonomicMaps.kingdomToPhylum[parent] || [];
-    default:
-      return kingdoms_hardcoded;
+  //Throw an error if the correctAnswer was not in allOptions, since this is dependent on me doing the data correctly.
+  if (!allOptions.includes(correctAnswer)) {
+    throw new Error(`Correct answer "${correctAnswer}" not found in options`);
   }
+  // Shuffle other options and take count-1 of them
+  const randomOthers = otherOptions
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count - 1);
+  // Combine with correct answer and shuffle again
+  return [...randomOthers, correctAnswer].sort(() => Math.random() - 0.5);
+}
+
+export function getOptionsForRank(
+  rank: string,
+  parent?: string,
+  expertMode: boolean = true,
+  correctAnswer?: string
+): string[] {
+  let allOptions: string[];
+
+  if (!parent) {
+    allOptions = kingdoms_hardcoded;
+  } else {
+    switch (rank) {
+      case 'species':
+        allOptions = taxonomicMaps.genusToSpecies[parent] || [];
+        break;
+      case 'genus':
+        allOptions = taxonomicMaps.familyToGenus[parent] || [];
+        break;
+      case 'family':
+        allOptions = taxonomicMaps.orderToFamily[parent] || [];
+        break;
+      case 'order':
+        allOptions = taxonomicMaps.classToOrder[parent] || [];
+        break;
+      case 'class':
+        allOptions = taxonomicMaps.phylumToClass[parent] || [];
+        break;
+      case 'phylum':
+        allOptions = taxonomicMaps.kingdomToPhylum[parent] || [];
+        break;
+      case 'kingdom':
+        allOptions = kingdoms_hardcoded;
+        break;
+      default:
+        console.error(`Invalid rank provided: ${rank}`);
+        throw new Error(`Invalid rank provided: ${rank}`);
+    }
+  }
+
+  // If expert mode is off and we have a correct answer, limit to 6 random options
+  if (!expertMode && correctAnswer && allOptions.length > 6) {
+    return getRandomOptions(allOptions, correctAnswer, 6);
+  }
+
+  return allOptions;
 } 

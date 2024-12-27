@@ -11,7 +11,7 @@ interface RawCSVRecord {
   taxonRank: string;
   kingdom: string;
   phylum: string;
-  classs: string;  // note the three 's's
+  classs: string;  // note the three 's's, programming languages would hate two 's's
   order: string;
   family: string;
   genus: string;
@@ -21,25 +21,36 @@ interface RawCSVRecord {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const hardMode = searchParams.get('hardMode') === 'true';
+    const birdMode = searchParams.get('birdMode') === 'true';
 
     const csvPath = path.join(process.cwd(), 'data/external/obs_media_mammals_aves_only.csv');
     const fileContents = await fs.readFile(csvPath, 'utf8');
-    
+
     const allRecords = parse(fileContents, {
       columns: true,
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-    // Filter records based on hard mode
-    const records = hardMode 
-      ? allRecords 
+    // Filter records to only show mammals unless bird mode is enabled
+    let records = birdMode
+      ? allRecords
       : allRecords.filter(record => record.classs === 'Mammalia');
 
-    // Get Unix timestamp in minutes and use it to select a record
+    // For now, there's so much goddamn roadkill, that I'm going to filter out possums. Ridiculous.
+    // It's not their fault, this world is an alien and lovecraftian horror for them.
+    records = records.filter(record => record.genus !== 'Didelphis');
+
+
+
+    // Generate a permutation that changes daily
+    const unixDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const indices = Array.from({ length: records.length }, (_, i) => i);
+    const permutation = indices.sort(() => Math.sin(unixDays + 1) - 0.5);
+
+    // Get Unix timestamp in minutes and use it to select from the permutation
     const unixMinutes = Math.floor(Date.now() / (1000 * 60));
-    const randomIndex = unixMinutes % records.length;
-    const randomRecord = records[randomIndex];
+    const permutationIndex = unixMinutes % records.length;
+    const randomRecord = records[permutation[permutationIndex]];
 
     const taxon: Taxon = {
       id: parseInt(randomRecord.id),

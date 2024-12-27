@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: 'inaturalist-open-data.s3.amazonaws.com',
         pathname: '/photos/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+        pathname: '/wikipedia/**',
+      },
     ],
   },
 };
