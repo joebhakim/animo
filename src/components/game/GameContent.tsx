@@ -54,7 +54,7 @@ export default function GameContent(props: GameContentProps) {
         <div className="order-2 md:order-1">
           <FullscreenImage
             src={props.question.identifier}
-            alt={props.question.taxon.scientificName}
+            alt={'NO CHEATING. This is an image of the animal you are trying to identify.'}
           />
         </div>
       </div>

@@ -3,6 +3,7 @@ import { getWikiExtract, getWikiHeaderImage } from '@/utils/wikiApi';
 import TreeViewScore from './TreeViewScore';
 import ScoreCalculation from './ScoreCalculation';
 import FullscreenImage from './FullscreenImage';
+import DonationModal from './DonationModal';
 
 interface VictoryScreenProps {
   scientificName: string;
@@ -24,6 +25,7 @@ export default function VictoryScreen({
   const [speciesInfo, setSpeciesInfo] = useState<string | null>(null);
   const [wikiPageTitle, setWikiPageTitle] = useState<string | null>(null);
   const [wikiHeaderImage, setWikiHeaderImage] = useState<string | null>(null);
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
   const numSentencesToFetch = 5;
   useEffect(() => {
@@ -114,6 +116,18 @@ export default function VictoryScreen({
         >
           Start New Game
         </button>
+
+        <button
+          onClick={() => setIsDonationModalOpen(true)}
+          className="mt-4 w-full bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
+        >
+          Buy me a coffee!
+        </button>
+
+        <DonationModal 
+          isOpen={isDonationModalOpen}
+          onClose={() => setIsDonationModalOpen(false)}
+        />
       </div>
     </div>
   );
