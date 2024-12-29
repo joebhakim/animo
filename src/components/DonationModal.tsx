@@ -1,12 +1,9 @@
-import { useState } from 'react';
-
 interface DonationModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
 export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
 
     if (!isOpen) return null;
 
@@ -21,7 +18,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
                         If youve really got too much money, so much that it hurts,
                         consider donating to <strong>Médecins Sans Frontières </strong>
                         (MSF) (Doctors Without Borders) instead. They provide vital
-                        medical care to those who need it most around the world, and 
+                        medical care to those who need it most around the world, and
                         overall are a bunch of good eggs.
                     </p>
                     <div className="flex space-x-3">
