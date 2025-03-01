@@ -120,6 +120,65 @@ export default function Home() {
     }
   };
 
+  // New function to handle species direct guess
+  const handleDirectSpeciesGuess = (option: string) => {
+    // Check if the guess matches the correct species regardless of current rank
+    if (option.toLowerCase() === question!.taxon.species.toLowerCase()) {
+      setLastGuess(option);
+      setIsCorrect(true);
+      
+      // Create a new array with all ranks as correct
+      const allRanks = RANK_ORDER.map(rank => rank[0].toUpperCase());
+      
+      // Create an object with all the correct taxonomic values
+      const allCorrectValues: Record<string, string> = {};
+      RANK_ORDER.forEach(rank => {
+        const rankKey = rank[0].toUpperCase();
+        allCorrectValues[rankKey] = question!.taxon[rank];
+      });
+      
+      // Update state to reflect all correct guesses
+      setCorrectGuesses(allRanks);
+      setCorrectGuessValues(allCorrectValues);
+      
+      // Complete the game after a short delay
+      setTimeout(() => {
+        setGameCompleted(true);
+        setLastGuess(null);
+        setIsCorrect(null);
+      }, 2000);
+    } else {
+      // For incorrect species guesses, use the normal handler for the current rank
+      handleGuess(option);
+    }
+  };
+
+  // Function to get suggestions based on user input
+  const getSuggestions = async (text: string): Promise<string[]> => {
+    // For now, generate placeholder suggestions
+    // Eventually this would call an API endpoint
+    console.log('Getting suggestions for:', text);
+    
+    // Basic placeholder suggestions based on the input text
+    const placeholderSuggestions = [
+      `${text} vulgaris`,
+      `${text} commensis`,
+      `${text} rederis`,
+      `${text} domesticus`,
+      `${text} silvaticus`
+    ];
+    
+    // Add the correct species if it includes the text (for easier testing)
+    if (question && question.taxon.species.toLowerCase().includes(text.toLowerCase())) {
+      placeholderSuggestions.push(question.taxon.species);
+    }
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return placeholderSuggestions;
+  };
+
   const startNewGame = () => {
     setGameCompleted(false);
     fetchQuestion();
@@ -192,7 +251,8 @@ export default function Home() {
           showHint={showHint}
           hints={hints}
           onShowHint={handleShowHint}
-          onGuess={handleGuess}
+          onTypedGuess={handleDirectSpeciesGuess}
+          onGetSuggestions={getSuggestions}
           options={options}
           expertMode={expertMode}
         />

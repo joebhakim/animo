@@ -31,10 +31,10 @@ export async function GET(request: Request) {
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-    // Filter records to only show mammals unless bird mode is enabled
+    // Filter records to only show mammals and reptiles unless bird mode is enabled
     let records = birdMode
       ? allRecords
-      : allRecords.filter(record => record.classs === 'Mammalia');
+      : allRecords.filter(record => record.classs === 'Mammalia' || record.classs === 'Reptilia');
 
     // For now, there's so much goddamn roadkill, that I'm going to filter out possums. Ridiculous.
     // It's not their fault, this world is an alien and lovecraftian horror for them.
@@ -52,6 +52,16 @@ export async function GET(request: Request) {
     const permutationIndex = unixMinutes % records.length;
     const randomRecord = records[permutation[permutationIndex]];
 
+    console.log('randomRecord', randomRecord);
+
+    // Sometimes randomRecord is undefined.
+    if (!randomRecord) {
+      console.error('randomRecord is undefined');
+      return NextResponse.json(
+        { error: 'Failed to fetch question' },
+        { status: 500 }
+      );
+    }
     const taxon: Taxon = {
       id: parseInt(randomRecord.id),
       scientificName: randomRecord.scientificName,
