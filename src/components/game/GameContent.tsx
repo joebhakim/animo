@@ -135,7 +135,9 @@ export default function GameContent(props: GameContentProps) {
           onGuess={props.onTypedGuess}
         />
 
-        <TypingField
+
+        {/* Disable this for now, since its broken... */}
+        {/* <TypingField
           onSubmitTypedText={props.onTypedGuess}
           species={props.question.taxon.species}
           suggestions={suggestions}
