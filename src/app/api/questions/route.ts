@@ -31,10 +31,10 @@ export async function GET(request: Request) {
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-    // Filter records to only show mammals unless bird mode is enabled
+    // Filter records to only show mammals and reptiles unless bird mode is enabled
     let records = birdMode
       ? allRecords
-      : allRecords.filter(record => record.classs === 'Mammalia');
+      : allRecords.filter(record => record.classs === 'Mammalia' || record.classs === 'Reptilia');
 
     // For now, there's so much goddamn roadkill, that I'm going to filter out possums. Ridiculous.
     // It's not their fault, this world is an alien and lovecraftian horror for them.
@@ -45,13 +45,21 @@ export async function GET(request: Request) {
     // Generate a permutation that changes daily
     const unixDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const indices = Array.from({ length: records.length }, (_, i) => i);
-    const permutation = indices.sort(() => Math.sin(unixDays + 1) - 0.5);
+    const permutation = indices.sort(() => Math.sin(unixDays * 1000 + 1) - 0.5);
 
     // Get Unix timestamp in minutes and use it to select from the permutation
     const unixMinutes = Math.floor(Date.now() / (1000 * 60));
     const permutationIndex = unixMinutes % records.length;
     const randomRecord = records[permutation[permutationIndex]];
 
+    // Sometimes randomRecord is undefined.
+    if (!randomRecord) {
+      console.error('randomRecord is undefined');
+      return NextResponse.json(
+        { error: 'Failed to fetch question' },
+        { status: 500 }
+      );
+    }
     const taxon: Taxon = {
       id: parseInt(randomRecord.id),
       scientificName: randomRecord.scientificName,

@@ -4,6 +4,8 @@ import StatusMessage from '../StatusMessage';
 import HintBox from '../HintBox';
 import AnswerGrid from './AnswerGrid';
 import { GameQuestion } from '@/types/taxonomy';
+import TypingField from './TypingField';
+import { useState, useEffect, useRef } from 'react';
 
 interface GameContentProps {
   question: GameQuestion;
@@ -19,12 +21,59 @@ interface GameContentProps {
   showHint: boolean;
   hints: Record<string, string>;
   onShowHint: () => void;
-  onGuess: (option: string) => void;
+  onTypedGuess: (option: string) => void;
+  onGetSuggestions?: (text: string) => Promise<string[]>; // Optional callback to get suggestions
   options: string[];
   expertMode: boolean;
 }
 
 export default function GameContent(props: GameContentProps) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Debounce the API call to avoid too many requests
+  useEffect(() => {
+    // Clear any existing timer when the input changes
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Only fetch if we have enough characters
+    if (inputValue.length >= 3 && props.onGetSuggestions) {
+      setIsLoadingSuggestions(true);
+      
+      // Set a new timer
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const newSuggestions = await props.onGetSuggestions!(inputValue);
+          setSuggestions(newSuggestions);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+          setSuggestions([]);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      }, 300); // 300ms debounce time
+    } else {
+      setSuggestions([]);
+      setIsLoadingSuggestions(false);
+    }
+    
+    // Cleanup timer on component unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [inputValue, props.onGetSuggestions]);
+  
+  // Handle input changes in the typing field
+  const handleInputChange = (text: string) => {
+    setInputValue(text);
+  };
+  
   return (
     <div className="space-y-8">
       <div className="grid grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-[1fr,300px] lg:grid-cols-[1fr,300px] gap-2 md:gap-4">
@@ -65,6 +114,7 @@ export default function GameContent(props: GameContentProps) {
             currentRank={props.currentRank}
             lastGuess={props.lastGuess}
             isCorrect={props.isCorrect}
+            previousRank={props.previousRank}
           />
         </div>
 
@@ -82,8 +132,17 @@ export default function GameContent(props: GameContentProps) {
           hints={props.hints}
           lastGuess={props.lastGuess}
           isCorrect={props.isCorrect}
-          onGuess={props.onGuess}
+          onGuess={props.onTypedGuess}
         />
+
+        <TypingField
+          onSubmitTypedText={props.onTypedGuess}
+          species={props.question.taxon.species}
+          suggestions={suggestions}
+          onInputChange={handleInputChange}
+          isLoading={isLoadingSuggestions}
+        />
+
         {/* if not on expert mode, hint that we're hiding some options... */}
         {!props.expertMode && (
           <div className="bg-white p-4 rounded-md">
