@@ -45,14 +45,12 @@ export async function GET(request: Request) {
     // Generate a permutation that changes daily
     const unixDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const indices = Array.from({ length: records.length }, (_, i) => i);
-    const permutation = indices.sort(() => Math.sin(unixDays + 1) - 0.5);
+    const permutation = indices.sort(() => Math.sin(unixDays * 1000 + 1) - 0.5);
 
     // Get Unix timestamp in minutes and use it to select from the permutation
     const unixMinutes = Math.floor(Date.now() / (1000 * 60));
     const permutationIndex = unixMinutes % records.length;
     const randomRecord = records[permutation[permutationIndex]];
-
-    console.log('randomRecord', randomRecord);
 
     // Sometimes randomRecord is undefined.
     if (!randomRecord) {

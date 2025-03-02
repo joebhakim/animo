@@ -57,8 +57,8 @@ def main():
 
     # for now, filter on class = 'Mammalia' or 'Aves' or 'Reptilia'
     obs_media = obs_media[
-        #(obs_media["classs"] == "Mammalia") | (obs_media["classs"] == "Aves") | (obs_media["classs"] == "Reptilia")
-        obs_media["classs"].isin(["Reptilia"])
+        (obs_media["classs"] == "Mammalia") | (obs_media["classs"] == "Aves") | (obs_media["classs"] == "Reptilia")
+        #obs_media["classs"].isin(["Reptilia"])
     ]
 
     print("number of records:", obs_media.shape[0])

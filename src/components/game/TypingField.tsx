@@ -21,7 +21,7 @@ interface TypingFieldProps {
     const inputRef = useRef<HTMLInputElement>(null);
     
     // Debug: Log the correct species to console
-    console.log('Debug - Correct species:', species);
+    console.log('Debug to test Katherine mode, since Id need to actually know the species:', species);
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
@@ -100,12 +100,12 @@ interface TypingFieldProps {
     
     return (
       <div className="relative">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-1.5">
           <input
             ref={inputRef}
             type="text"
             className="w-full p-2 border rounded-md"
-            placeholder="If you know, enter the species directly"
+            placeholder="Katherine mode: type the species directly"
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}

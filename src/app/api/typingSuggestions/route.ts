@@ -51,11 +51,15 @@ async function getSpeciesData() {
 }
 
 export async function GET(request: Request) {
+
+  console.log('GET request received');
   try {
     // Get query parameter
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query')?.toLowerCase() || '';
     const birdMode = searchParams.get('birdMode') === 'true';
+
+    console.log('query delivered to typing suggestions', query);
     
     // Return early if query is too short
     if (query.length < 3) {
@@ -66,12 +70,11 @@ export async function GET(request: Request) {
     const allRecords = await getSpeciesData();
 
     // Filter records based on bird mode same as in questions route
-    let records = birdMode
-      ? allRecords
-      : allRecords.filter(record => record.classs === 'Mammalia' || record.classs === 'Reptilia');
+    let records = allRecords
 
-    // Filter out possums as in the questions route
-    records = records.filter(record => record.genus !== 'Didelphis');
+    // Filter out possums as in the questions route 
+    //No need to filter these out since we're in the suggestions route
+    //records = records.filter(record => record.genus !== 'Didelphis');
 
     // Find matching species based on the query
     const matchingSpecies = records
@@ -96,13 +99,20 @@ export async function GET(request: Request) {
       .map(record => record.scientificName);
 
     // Remove duplicates and limit to 10 results
-    const uniqueMatches = [...new Set(matchingSpecies)].slice(0, 10);
+
+    // Just placeholder for now
+    //const uniqueMatches = ['Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark', 'Aardvark'];
+    
+    const uniqueMatches = [...new Set(matchingSpecies)].slice(0, 100);
+
+    
 
     // Add cache-control headers for browser caching
     const headers = new Headers();
     headers.append('Cache-Control', 'public, max-age=60'); // Cache for 1 minute in the browser
 
-    return NextResponse.json(uniqueMatches, { headers });
+    // Return the unique matches, as { suggestions: uniqueMatches }
+    return NextResponse.json({ suggestions: uniqueMatches }, { headers });
   } catch (error) {
     console.error('Error generating typing suggestions:', error);
     return NextResponse.json(

@@ -13,6 +13,8 @@ const RANK_ORDER = [
   'kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species'
 ] as const;
 
+const QUESTION_TIME_DELAY = 1000;
+
 export default function Home() {
   const [question, setQuestion] = useState<GameQuestion | null>(null)
   const [currentRankIndex, setCurrentRankIndex] = useState(0)
@@ -64,10 +66,10 @@ export default function Home() {
     if (!showHint && Object.keys(hints).length === 0 && question) {
       const correctAnswer = question.taxon[RANK_ORDER[currentRankIndex]];
       const totalNumHints = expertMode ? 6 : 3;
-      
+
       // Use the already filtered options for hints
       const optionsForHints = filteredOptions.length > 0 ? filteredOptions : options;
-      
+
       // Then select the hint options from those options
       const otherOptions = optionsForHints
         .filter(opt => opt !== correctAnswer)
@@ -109,7 +111,7 @@ export default function Home() {
         handleCorrectAnswer();
         setLastGuess(null);
         setIsCorrect(null);
-      }, 2000);
+      }, QUESTION_TIME_DELAY);
     } else {
       // Track incorrect guess
       const rankKey = currentRank[0].toUpperCase();
@@ -124,29 +126,34 @@ export default function Home() {
   const handleDirectSpeciesGuess = (option: string) => {
     // Check if the guess matches the correct species regardless of current rank
     if (option.toLowerCase() === question!.taxon.species.toLowerCase()) {
+      // Set last guess and mark as correct
       setLastGuess(option);
       setIsCorrect(true);
-      
+
       // Create a new array with all ranks as correct
       const allRanks = RANK_ORDER.map(rank => rank[0].toUpperCase());
-      
+
       // Create an object with all the correct taxonomic values
       const allCorrectValues: Record<string, string> = {};
       RANK_ORDER.forEach(rank => {
         const rankKey = rank[0].toUpperCase();
         allCorrectValues[rankKey] = question!.taxon[rank];
       });
-      
+
       // Update state to reflect all correct guesses
       setCorrectGuesses(allRanks);
       setCorrectGuessValues(allCorrectValues);
-      
+
+      // Temporarily override currentRank to show the correct message
+      // We'll set a special flag to indicate this is a direct species guess
+      setPreviousRank('direct_species_win');
+
       // Complete the game after a short delay
       setTimeout(() => {
         setGameCompleted(true);
         setLastGuess(null);
         setIsCorrect(null);
-      }, 2000);
+      }, QUESTION_TIME_DELAY);
     } else {
       // For incorrect species guesses, use the normal handler for the current rank
       handleGuess(option);
@@ -155,28 +162,35 @@ export default function Home() {
 
   // Function to get suggestions based on user input
   const getSuggestions = async (text: string): Promise<string[]> => {
-    // For now, generate placeholder suggestions
-    // Eventually this would call an API endpoint
-    console.log('Getting suggestions for:', text);
-    
-    // Basic placeholder suggestions based on the input text
-    const placeholderSuggestions = [
-      `${text} vulgaris`,
-      `${text} commensis`,
-      `${text} rederis`,
-      `${text} domesticus`,
-      `${text} silvaticus`
-    ];
-    
-    // Add the correct species if it includes the text (for easier testing)
-    if (question && question.taxon.species.toLowerCase().includes(text.toLowerCase())) {
-      placeholderSuggestions.push(question.taxon.species);
+    if (!text || text.trim().length < 2) return [];
+
+    try {
+      const response = await fetch(`/api/typingSuggestions?query=${encodeURIComponent(text)}`);
+
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions');
+      }
+
+      const data = await response.json();
+
+      return data.suggestions || [];
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      // Fallback to placeholder suggestions in case of error
+      const placeholderSuggestions = [
+        text.toLowerCase() + " vulgaris",
+        text.toLowerCase() + " commensis",
+        text.toLowerCase() + " domesticus",
+      ];
+
+      // Add the correct species if it includes the text (for easier testing)
+      if (question && question.taxon.species.toLowerCase().includes(text.toLowerCase())) {
+        placeholderSuggestions.push(question.taxon.species);
+      }
+
+      return placeholderSuggestions;
     }
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return placeholderSuggestions;
   };
 
   const startNewGame = () => {
@@ -214,7 +228,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen p-4 sm:p-8 max-w-4xl mx-auto bg-white text-gray-800">
-      <GameHeader 
+      <GameHeader
         birdMode={birdMode}
         expertMode={expertMode}
         onBirdModeToggle={() => setBirdMode(!birdMode)}
@@ -222,7 +236,7 @@ export default function Home() {
         onInfoClick={() => setShowInfo(true)}
       />
 
-      <InfoModal 
+      <InfoModal
         isOpen={showInfo}
         onClose={() => setShowInfo(false)}
       />

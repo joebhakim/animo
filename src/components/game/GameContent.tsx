@@ -114,6 +114,7 @@ export default function GameContent(props: GameContentProps) {
             currentRank={props.currentRank}
             lastGuess={props.lastGuess}
             isCorrect={props.isCorrect}
+            previousRank={props.previousRank}
           />
         </div>
 
