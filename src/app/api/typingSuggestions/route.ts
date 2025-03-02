@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     // Get query parameter
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query')?.toLowerCase() || '';
-    const birdMode = searchParams.get('birdMode') === 'true';
+    //const birdMode = searchParams.get('birdMode') === 'true';
 
     console.log('query delivered to typing suggestions', query);
     
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     const allRecords = await getSpeciesData();
 
     // Filter records based on bird mode same as in questions route
-    let records = allRecords
+    const records = allRecords
 
     // Filter out possums as in the questions route 
     //No need to filter these out since we're in the suggestions route
