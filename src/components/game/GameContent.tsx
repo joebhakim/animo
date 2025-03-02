@@ -5,7 +5,7 @@ import HintBox from '../HintBox';
 import AnswerGrid from './AnswerGrid';
 import { GameQuestion } from '@/types/taxonomy';
 import TypingField from './TypingField';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface GameContentProps {
   question: GameQuestion;
@@ -22,26 +22,56 @@ interface GameContentProps {
   hints: Record<string, string>;
   onShowHint: () => void;
   onTypedGuess: (option: string) => void;
-  onGetSuggestions?: (text: string) => Promise<string[]>;
+  onGetSuggestions?: (text: string) => Promise<string[]>; // Optional callback to get suggestions
   options: string[];
   expertMode: boolean;
 }
 
 export default function GameContent(props: GameContentProps) {
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  const handleInputChange = async (text: string) => {
-    if (text.length >= 3 && props.onGetSuggestions) {
-      try {
-        const newSuggestions = await props.onGetSuggestions(text);
-        setSuggestions(newSuggestions);
-      } catch (error) {
-        console.error('Error fetching suggestions:', error);
-        setSuggestions([]);
-      }
+  // Debounce the API call to avoid too many requests
+  useEffect(() => {
+    // Clear any existing timer when the input changes
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Only fetch if we have enough characters
+    if (inputValue.length >= 3 && props.onGetSuggestions) {
+      setIsLoadingSuggestions(true);
+      
+      // Set a new timer
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const newSuggestions = await props.onGetSuggestions!(inputValue);
+          setSuggestions(newSuggestions);
+        } catch (error) {
+          console.error('Error fetching suggestions:', error);
+          setSuggestions([]);
+        } finally {
+          setIsLoadingSuggestions(false);
+        }
+      }, 300); // 300ms debounce time
     } else {
       setSuggestions([]);
+      setIsLoadingSuggestions(false);
     }
+    
+    // Cleanup timer on component unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [inputValue, props.onGetSuggestions]);
+  
+  // Handle input changes in the typing field
+  const handleInputChange = (text: string) => {
+    setInputValue(text);
   };
   
   return (
@@ -109,6 +139,7 @@ export default function GameContent(props: GameContentProps) {
           species={props.question.taxon.species}
           suggestions={suggestions}
           onInputChange={handleInputChange}
+          isLoading={isLoadingSuggestions}
         />
 
         {/* if not on expert mode, hint that we're hiding some options... */}
