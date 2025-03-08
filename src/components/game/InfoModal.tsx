@@ -52,6 +52,10 @@ export default function InfoModal({ isOpen, onClose }: InfoModalProps) {
         <h2 className="text-xl font-bold mb-4">Changelog</h2>
         <div className="space-y-2 text-gray-600">
           <div className="flex gap-4">
+            <span className="text-sm text-gray-400 shrink-0">Mar 8, 2025 A.D.</span>
+            <p>Someone asked me to banish reptiles, but Im keeping them in a separate toggle. Now you can choose any of the three classes (Aves, Mammalia, Reptilia) to play. Also removed the typing thing cuz its a deploy issue, which idk how to debug yet. Also softened the message on the donation modal. </p>
+          </div>
+          <div className="flex gap-4">
             <span className="text-sm text-gray-400 shrink-0">Mar 2, 2025 A.D.</span>
             <p>People seem to be persistently playing this game, including insane people who can e.g. recognize birds IMMEDIATELY, so Ive been commissioned to add a TYPING BOX in which one can instantly win by entering the correct scientific name. Also added reptiles, but these are too often roadkill, so they might not last. </p>
           </div>
