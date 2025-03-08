@@ -4,7 +4,6 @@ import StatusMessage from '../StatusMessage';
 import HintBox from '../HintBox';
 import AnswerGrid from './AnswerGrid';
 import { GameQuestion } from '@/types/taxonomy';
-import TypingField from './TypingField';
 import { useState, useEffect, useRef } from 'react';
 
 interface GameContentProps {
@@ -28,9 +27,9 @@ interface GameContentProps {
 }
 
 export default function GameContent(props: GameContentProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [inputValue, setInputValue] = useState('');
+  const [, setSuggestions] = useState<string[]>([]);
+  const [, setIsLoadingSuggestions] = useState(false);
+  const [inputValue, ] = useState('');
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Debounce the API call to avoid too many requests
@@ -69,10 +68,10 @@ export default function GameContent(props: GameContentProps) {
     };
   }, [inputValue, props.onGetSuggestions]);
   
-  // Handle input changes in the typing field
+/*   // Handle input changes in the typing field
   const handleInputChange = (text: string) => {
     setInputValue(text);
-  };
+  }; */
   
   return (
     <div className="space-y-8">

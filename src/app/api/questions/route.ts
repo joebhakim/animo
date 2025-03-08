@@ -21,7 +21,23 @@ interface RawCSVRecord {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const birdMode = searchParams.get('birdMode') === 'true';
+    // Replace birdMode with three separate flags
+    const birdsEnabled = searchParams.get('birdsEnabled') === 'true';
+    const mammalsEnabled = searchParams.get('mammalsEnabled') === 'true';
+    const reptilesEnabled = searchParams.get('reptilesEnabled') === 'true';
+
+    // Use the flags directly without defaulting to mammals
+    const useBirdsEnabled = birdsEnabled;
+    const useMammalsEnabled = mammalsEnabled;
+    const useReptilesEnabled = reptilesEnabled;
+
+    // Make sure we have at least one animal type enabled
+    if (!useBirdsEnabled && !useMammalsEnabled && !useReptilesEnabled) {
+      return NextResponse.json(
+        { error: 'No animal types selected' },
+        { status: 400 }
+      );
+    }
 
     const csvPath = path.join(process.cwd(), 'data/external/obs_media_mammals_aves_only.csv');
     const fileContents = await fs.readFile(csvPath, 'utf8');
@@ -31,16 +47,17 @@ export async function GET(request: Request) {
       skip_empty_lines: true
     }) as RawCSVRecord[];
 
-    // Filter records to only show mammals and reptiles unless bird mode is enabled
-    let records = birdMode
-      ? allRecords
-      : allRecords.filter(record => record.classs === 'Mammalia' || record.classs === 'Reptilia');
+    // Filter records based on which animal classes are enabled
+    let records = allRecords.filter(record => {
+      if (record.classs === 'Aves' && useBirdsEnabled) return true;
+      if (record.classs === 'Mammalia' && useMammalsEnabled) return true;
+      if (record.classs === 'Reptilia' && useReptilesEnabled) return true;
+      return false;
+    });
 
     // For now, there's so much goddamn roadkill, that I'm going to filter out possums. Ridiculous.
     // It's not their fault, this world is an alien and lovecraftian horror for them.
     records = records.filter(record => record.genus !== 'Didelphis');
-
-
 
     // Generate a permutation that changes daily
     const unixDays = Math.floor(Date.now() / (1000 * 60 * 60 * 24));

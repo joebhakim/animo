@@ -1,19 +1,28 @@
 import { useState, useRef, useEffect } from 'react';
-import BirdModeToggle from './BirdModeToggle';
 import ExpertModeToggle from './ExpertModeToggle';
+import AnimalToggle from './AnimalToggle';
 
+// GameHeader component props
 interface GameHeaderProps {
-  birdMode: boolean;
+  birdsEnabled: boolean;
+  mammalsEnabled: boolean;
+  reptilesEnabled: boolean;
   expertMode: boolean;
-  onBirdModeToggle: () => void;
+  onBirdsToggle: () => void;
+  onMammalsToggle: () => void;
+  onReptilesToggle: () => void;
   onExpertModeToggle: () => void;
   onInfoClick: () => void;
 }
 
 export default function GameHeader({
-  birdMode,
+  birdsEnabled,
+  mammalsEnabled,
+  reptilesEnabled,
   expertMode,
-  onBirdModeToggle,
+  onBirdsToggle,
+  onMammalsToggle,
+  onReptilesToggle,
   onExpertModeToggle,
   onInfoClick,
 }: GameHeaderProps) {
@@ -44,13 +53,34 @@ export default function GameHeader({
           </button>
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 p-3 space-y-3 z-10">
+              
+              <div className="text-sm text-gray-600 italic text-center">Im a fan of...</div>
+
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Birds, too?!</span>
-                <BirdModeToggle
-                  birdMode={birdMode}
-                  onToggleBirdMode={onBirdModeToggle}
+                <span className="text-sm text-gray-600">Birds</span>
+                <AnimalToggle
+                  enabled={birdsEnabled}
+                  onToggle={onBirdsToggle}
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Mammals</span>
+                <AnimalToggle
+                  enabled={mammalsEnabled}
+                  onToggle={onMammalsToggle}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Reptiles</span>
+                <AnimalToggle
+                  enabled={reptilesEnabled}
+                  onToggle={onReptilesToggle}
+                />
+              </div>
+              
+              {/* Separator */}
+              <div className="border-t border-gray-200 my-1"></div>
+              
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Expert Mode</span>
                 <ExpertModeToggle

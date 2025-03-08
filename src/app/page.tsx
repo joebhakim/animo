@@ -30,9 +30,12 @@ export default function Home() {
   const [correctGuessValues, setCorrectGuessValues] = useState<Record<string, string>>({})
   const [showScoreOnMobile, setShowScoreOnMobile] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
-  const [birdMode, setBirdMode] = useState(false)
+  const [birdsEnabled, setBirdsEnabled] = useState(false)
+  const [mammalsEnabled, setMammalsEnabled] = useState(true)
+  const [reptilesEnabled, setReptilesEnabled] = useState(false)
   const [expertMode, setExpertMode] = useState(false)
   const [filteredOptions, setFilteredOptions] = useState<string[]>([])
+  const [noAnimalsSelected, setNoAnimalsSelected] = useState(false)
 
   useEffect(() => {
     fetchQuestion()
@@ -40,12 +43,20 @@ export default function Home() {
 
   useEffect(() => {
     fetchQuestion()
-  }, [birdMode])
+  }, [birdsEnabled, mammalsEnabled, reptilesEnabled])
 
   const fetchQuestion = async () => {
     try {
+      // Check if all animal toggles are off
+      if (!birdsEnabled && !mammalsEnabled && !reptilesEnabled) {
+        setNoAnimalsSelected(true)
+        setLoading(false)
+        return
+      }
+
+      setNoAnimalsSelected(false)
       setLoading(true)
-      const response = await fetch(`/api/questions?birdMode=${birdMode}`)
+      const response = await fetch(`/api/questions?birdsEnabled=${birdsEnabled}&mammalsEnabled=${mammalsEnabled}&reptilesEnabled=${reptilesEnabled}`)
       const data = await response.json()
       setQuestion(data)
       setCurrentRankIndex(0)
@@ -229,9 +240,13 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 sm:p-8 max-w-4xl mx-auto bg-white text-gray-800">
       <GameHeader
-        birdMode={birdMode}
+        birdsEnabled={birdsEnabled}
+        mammalsEnabled={mammalsEnabled}
+        reptilesEnabled={reptilesEnabled}
         expertMode={expertMode}
-        onBirdModeToggle={() => setBirdMode(!birdMode)}
+        onBirdsToggle={() => setBirdsEnabled(!birdsEnabled)}
+        onMammalsToggle={() => setMammalsEnabled(!mammalsEnabled)}
+        onReptilesToggle={() => setReptilesEnabled(!reptilesEnabled)}
         onExpertModeToggle={() => setExpertMode(!expertMode)}
         onInfoClick={() => setShowInfo(true)}
       />
@@ -241,7 +256,12 @@ export default function Home() {
         onClose={() => setShowInfo(false)}
       />
 
-      {gameCompleted ? (
+      {noAnimalsSelected ? (
+        <div className="flex flex-col items-center justify-center h-96">
+          <h1 className="text-3xl font-bold text-center text-gray-800">NO ANIMAL TYPES SELECTED</h1>
+          <p className="mt-4 text-center text-gray-600">Why do you dislike animals? Or maybe youre more into plants? Email me and I can try adding them from the API if so.</p>
+        </div>
+      ) : gameCompleted ? (
         <VictoryScreen
           scientificName={question.taxon.scientificName}
           imageUrl={question.identifier}

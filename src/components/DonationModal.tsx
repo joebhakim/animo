@@ -12,7 +12,7 @@ export default function DonationModal({ isOpen, onClose }: DonationModalProps) {
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
                 <div className="space-y-4">
                     <p className="text-gray-700">
-                        HA! You think I need your stinking COFFEE!? <strong>BOIL YOUR HEAD IN IT.</strong>
+                        HA! You think I need your stinking COFFEE!? <strong>NO THANKS 😊</strong>
                     </p>
                     <p>
                         If youve really got too much money, so much that it hurts,
