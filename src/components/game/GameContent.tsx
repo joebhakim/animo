@@ -3,6 +3,7 @@ import TreeViewScore from '../TreeViewScore';
 import StatusMessage from '../StatusMessage';
 import HintBox from '../HintBox';
 import AnswerGrid from './AnswerGrid';
+import TypingField from './TypingField';
 import { GameQuestion } from '@/types/taxonomy';
 import { useState, useEffect, useRef } from 'react';
 
@@ -27,22 +28,22 @@ interface GameContentProps {
 }
 
 export default function GameContent(props: GameContentProps) {
-  const [, setSuggestions] = useState<string[]>([]);
-  const [, setIsLoadingSuggestions] = useState(false);
-  const [inputValue, ] = useState('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Debounce the API call to avoid too many requests
   useEffect(() => {
     // Clear any existing timer when the input changes
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    
+
     // Only fetch if we have enough characters
     if (inputValue.length >= 3 && props.onGetSuggestions) {
       setIsLoadingSuggestions(true);
-      
+
       // Set a new timer
       debounceTimerRef.current = setTimeout(async () => {
         try {
@@ -59,7 +60,7 @@ export default function GameContent(props: GameContentProps) {
       setSuggestions([]);
       setIsLoadingSuggestions(false);
     }
-    
+
     // Cleanup timer on component unmount
     return () => {
       if (debounceTimerRef.current) {
@@ -67,12 +68,12 @@ export default function GameContent(props: GameContentProps) {
       }
     };
   }, [inputValue, props.onGetSuggestions]);
-  
-/*   // Handle input changes in the typing field
+
+  // Handle input changes in the typing field
   const handleInputChange = (text: string) => {
     setInputValue(text);
-  }; */
-  
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-[1fr,300px] lg:grid-cols-[1fr,300px] gap-2 md:gap-4">
@@ -134,15 +135,17 @@ export default function GameContent(props: GameContentProps) {
           onGuess={props.onTypedGuess}
         />
 
-
-        {/* Disable this for now, since its broken... */}
-        {/* <TypingField
-          onSubmitTypedText={props.onTypedGuess}
-          species={props.question.taxon.species}
-          suggestions={suggestions}
-          onInputChange={handleInputChange}
-          isLoading={isLoadingSuggestions}
-        />
+        {/* Species direct typing option */}
+        <div className="mt-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Know the exact species? Type it here:</h3>
+          <TypingField
+            onSubmitTypedText={props.onTypedGuess}
+            species={props.question.taxon.species}
+            suggestions={suggestions}
+            onInputChange={handleInputChange}
+            isLoading={isLoadingSuggestions}
+          />
+        </div>
 
         {/* if not on expert mode, hint that we're hiding some options... */}
         {!props.expertMode && (

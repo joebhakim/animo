@@ -25,6 +25,8 @@ export async function GET(request: Request) {
     const birdsEnabled = searchParams.get('birdsEnabled') === 'true';
     const mammalsEnabled = searchParams.get('mammalsEnabled') === 'true';
     const reptilesEnabled = searchParams.get('reptilesEnabled') === 'true';
+    // Get the random seed if provided
+    const randomSeed = searchParams.get('random');
 
     // Use the flags directly without defaulting to mammals
     const useBirdsEnabled = birdsEnabled;
@@ -64,10 +66,20 @@ export async function GET(request: Request) {
     const indices = Array.from({ length: records.length }, (_, i) => i);
     const permutation = indices.sort(() => Math.sin(unixDays * 1000 + 1) - 0.5);
 
-    // Get Unix timestamp in minutes and use it to select from the permutation
-    const unixMinutes = Math.floor(Date.now() / (1000 * 60));
-    const permutationIndex = unixMinutes % records.length;
-    const randomRecord = records[permutation[permutationIndex]];
+    // Select a record based on either random parameter or time
+    let randomRecord;
+    if (randomSeed) {
+      // If random seed is provided, use it to select a random animal
+      const seed = parseInt(randomSeed);
+      // Use the seed with the daily permutation for better randomization
+      const randomIndex = Math.abs(seed) % records.length;
+      randomRecord = records[permutation[randomIndex]];
+    } else {
+      // Otherwise use the time-based selection (for backward compatibility)
+      const unixMinutes = Math.floor(Date.now() / (1000 * 60));
+      const permutationIndex = unixMinutes % records.length;
+      randomRecord = records[permutation[permutationIndex]];
+    }
 
     // Sometimes randomRecord is undefined.
     if (!randomRecord) {

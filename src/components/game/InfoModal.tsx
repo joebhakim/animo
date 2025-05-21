@@ -32,7 +32,7 @@ export default function InfoModal({ isOpen, onClose }: InfoModalProps) {
         >
           ✕
         </button>
-        
+
         <h2 className="text-xl font-bold mb-4">How to Play</h2>
         <div className="space-y-4 text-gray-600 mb-8">
           <p>
@@ -47,10 +47,17 @@ export default function InfoModal({ isOpen, onClose }: InfoModalProps) {
           <p>
             Need help? Use the hint button to narrow down your choices to three options and learn more about each one.
           </p>
+          <p>
+            Expert players can type the full scientific name directly into the typing field to skip ahead. Correct scientific names immediately complete the game!
+          </p>
         </div>
 
         <h2 className="text-xl font-bold mb-4">Changelog</h2>
         <div className="space-y-2 text-gray-600">
+          <div className="flex gap-4">
+            <span className="text-sm text-gray-400 shrink-0">Mar 10, 2025 A.D.</span>
+            <p>Re-enabled the typing field to allow species name experts to type scientific names directly. Now you can instantly win by entering the correct scientific name at any point in the game.</p>
+          </div>
           <div className="flex gap-4">
             <span className="text-sm text-gray-400 shrink-0">Mar 8, 2025 A.D.</span>
             <p>Someone asked me to banish reptiles, but Im keeping them in a separate toggle. Now you can choose any of the three classes (Aves, Mammalia, Reptilia) to play. Also removed the typing thing cuz its a deploy issue, which idk how to debug yet. Also softened the message on the donation modal. </p>

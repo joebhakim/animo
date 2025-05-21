@@ -56,9 +56,8 @@ export default function Home() {
 
       setNoAnimalsSelected(false)
       setLoading(true)
-      const response = await fetch(`/api/questions?birdsEnabled=${birdsEnabled}&mammalsEnabled=${mammalsEnabled}&reptilesEnabled=${reptilesEnabled}`)
-      const data = await response.json()
-      setQuestion(data)
+      // Reset the game state
+      setGameCompleted(false)
       setCurrentRankIndex(0)
       setShowHint(false)
       setHints({})
@@ -66,6 +65,16 @@ export default function Home() {
       setCorrectGuesses([])
       setCorrectGuessValues({})
       setFilteredOptions([])
+      setIsCorrect(null)
+      setLastGuess(null)
+      setPreviousRank(null)
+
+      // Add a random parameter to ensure we get a different animal each time
+      // Create a random seed combining current timestamp and random number for unpredictability
+      const randomSeed = Date.now() ^ Math.floor(Math.random() * 1000000);
+      const response = await fetch(`/api/questions?birdsEnabled=${birdsEnabled}&mammalsEnabled=${mammalsEnabled}&reptilesEnabled=${reptilesEnabled}&random=${randomSeed}`)
+      const data = await response.json()
+      setQuestion(data)
     } catch (error) {
       console.error('Error fetching question:', error)
     } finally {
@@ -166,7 +175,14 @@ export default function Home() {
         setIsCorrect(null);
       }, QUESTION_TIME_DELAY);
     } else {
-      // For incorrect species guesses, use the normal handler for the current rank
+      // For incorrect species guesses, first record it in the guessHistory as a species incorrect attempt
+      const speciesRankKey = 'S'; // Species rank key
+      setGuessHistory(prev => ({
+        ...prev,
+        [speciesRankKey]: [...(prev[speciesRankKey] || []), option]
+      }));
+
+      // Then use the normal handler for the current rank
       handleGuess(option);
     }
   };
@@ -210,9 +226,14 @@ export default function Home() {
   };
 
   if (loading) {
-    return <div className="min-h-screen p-8 flex items-center justify-center">
-      <p>Loading...</p>
-    </div>
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading a new animal...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!question) {
@@ -249,6 +270,8 @@ export default function Home() {
         onReptilesToggle={() => setReptilesEnabled(!reptilesEnabled)}
         onExpertModeToggle={() => setExpertMode(!expertMode)}
         onInfoClick={() => setShowInfo(true)}
+        onRefresh={fetchQuestion}
+        isLoading={loading}
       />
 
       <InfoModal
