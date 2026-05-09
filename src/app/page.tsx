@@ -39,10 +39,6 @@ export default function Home() {
 
   useEffect(() => {
     fetchQuestion()
-  }, [])
-
-  useEffect(() => {
-    fetchQuestion()
   }, [birdsEnabled, mammalsEnabled, reptilesEnabled])
 
   const fetchQuestion = async () => {
@@ -175,14 +171,9 @@ export default function Home() {
         setIsCorrect(null);
       }, QUESTION_TIME_DELAY);
     } else {
-      // For incorrect species guesses, first record it in the guessHistory as a species incorrect attempt
-      const speciesRankKey = 'S'; // Species rank key
-      setGuessHistory(prev => ({
-        ...prev,
-        [speciesRankKey]: [...(prev[speciesRankKey] || []), option]
-      }));
-
-      // Then use the normal handler for the current rank
+      // Not a species match — treat as a normal guess at the current rank.
+      // handleGuess records the miss under the current rank key (which is 'S' if
+      // the user is genuinely on species).
       handleGuess(option);
     }
   };

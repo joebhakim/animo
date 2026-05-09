@@ -31,4 +31,26 @@ taxon level (e.g. kingdom, phylum, class, order, family, genus, species), descri
 
 
 ## Technologies:
-Webapp. Vercel hosted. Next.js, Tailwind, postgres, supabase.
+Webapp. Self-hosted. Next.js, Tailwind. (Data is currently a static CSV in `data/external/`; no DB.)
+
+## Deployments:
+- Production: https://animo.joeha.kim
+- Staging: https://animorl-gooeydough.joeha.kim (Access-gated `gooeydough` preview)
+- Local dev: http://localhost:3000
+
+## How deploys work
+This app is managed by the `joesite-status` control plane at
+`~/skunks/joesite-status`. See its README for the full picture; the short
+version:
+
+- App registry: `~/skunks/joesite-status/apps.toml` (`[apps.animorl]`).
+- Service: `joesite-animorl.service` runs `npm run start` on `127.0.0.1:8503`
+  as user `joe`. Unit lives at `~/skunks/joesite-status/systemd/joesite-animorl.service`.
+- Public route: Cloudflare Tunnel maps `animo.joeha.kim` → `127.0.0.1:8503`
+  (see `/etc/cloudflared/config.yml`).
+- Auto-deploy: pushes to `main` on GitHub fire a webhook to
+  `https://status.joeha.kim/github`. The controller fast-forwards the local
+  checkout, runs `npm run build`, and restarts the service.
+- Manual deploy: `sudo ~/skunks/joesite-status/joesitectl.py deploy animorl`.
+- Status: `https://status.joeha.kim/` or
+  `~/skunks/joesite-status/joesitectl.py status animorl --fetch`.
